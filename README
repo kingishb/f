@@ -13,3 +13,6 @@ Usage:
     # find files with the extension xml starting at ~/bin not in the
     # venv folder
     f --root ~/bin --ignore venv \.xml$
+
+License:
+MIT

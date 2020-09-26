@@ -7,55 +7,6 @@ use walkdir::{DirEntry, WalkDir};
 // Change the alias to `Box<error::Error>`.
 type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
-// returns the current working directory if exists
-fn cwd() -> String {
-    env::current_dir()
-        .unwrap()
-        .into_os_string()
-        .into_string()
-        .unwrap()
-}
-
-#[derive(Debug, StructOpt)]
-#[structopt(name = "f", about = "File finding utility")]
-struct Opt {
-    /// Optional root directory to use
-    #[structopt(short, long)]
-    root: Option<String>,
-
-    /// Optional regexp to ignore
-    #[structopt(short, long)]
-    ignore: Option<String>,
-
-    /// Regexp to search for
-    #[structopt(name = "PATTERN")]
-    pattern: String,
-}
-
-fn ignore_libraries(entry: &DirEntry) -> bool {
-    let ignore_list = vec!["node_modules", "venv"];
-    entry
-        .file_name()
-        .to_str()
-        .map(|s| {
-            for i in ignore_list.iter() {
-                if s.contains(i) {
-                    return true;
-                }
-            }
-            return false;
-        })
-        .unwrap_or(false)
-}
-
-fn is_hidden(entry: &DirEntry) -> bool {
-    entry
-        .file_name()
-        .to_str()
-        .map(|s| s.starts_with("."))
-        .unwrap_or(false)
-}
-
 fn main() -> Result<()> {
     // parse options
     let opt = Opt::from_args();
@@ -93,3 +44,56 @@ fn main() -> Result<()> {
     }
     Ok(())
 }
+
+// returns the current working directory if exists
+fn cwd() -> String {
+    env::current_dir()
+        .unwrap()
+        .into_os_string()
+        .into_string()
+        .unwrap()
+}
+
+#[derive(Debug, StructOpt)]
+#[structopt(name = "f", about = "File finding utility")]
+struct Opt {
+    /// Optional root directory to use
+    #[structopt(short, long)]
+    root: Option<String>,
+
+    /// Optional regexp to ignore
+    #[structopt(short, long)]
+    ignore: Option<String>,
+
+    /// Regexp to search for
+    #[structopt(name = "PATTERN")]
+    pattern: String,
+}
+
+
+// ignore common programming folders containing third party libraries
+fn ignore_libraries(entry: &DirEntry) -> bool {
+    let ignore_list = vec!["node_modules", "venv"];
+    entry
+        .file_name()
+        .to_str()
+        .map(|s| {
+            for i in ignore_list.iter() {
+                if s.contains(i) {
+                    return true;
+                }
+            }
+            return false;
+        })
+        .unwrap_or(false)
+}
+
+// ignore hidden directories
+fn is_hidden(entry: &DirEntry) -> bool {
+    entry
+        .file_name()
+        .to_str()
+        .map(|s| s.starts_with("."))
+        .unwrap_or(false)
+}
+
