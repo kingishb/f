@@ -1,0 +1,15 @@
+File finder. 
+
+Install:
+cargo build --release
+
+Usage:
+    # find files with the extension xml starting at cwd
+    f \.xml$
+
+    # find files with the extension xml starting at ~/bin
+    f --root ~/bin \.xml$
+
+    # find files with the extension xml starting at ~/bin not in the
+    # venv folder
+    f --root ~/bin --ignore venv \.xml$
