@@ -1,4 +1,3 @@
-use regex;
 use std::env;
 use std::error;
 use structopt::StructOpt;
@@ -33,10 +32,8 @@ fn main() -> Result<()> {
         let entry = entry?;
         if let Some(x) = entry.file_name().to_str() {
             if r.is_match(x) {
-                if to_ignore != "" {
-                    if ig.is_match(entry.path().to_str().unwrap()) {
-                        continue;
-                    }
+                if to_ignore != "" && ig.is_match(entry.path().to_str().unwrap()) {
+                    continue;
                 }
                 println!("{}", entry.path().display());
             }
@@ -83,7 +80,7 @@ fn ignore_libraries(entry: &DirEntry) -> bool {
                     return true;
                 }
             }
-            return false;
+            false
         })
         .unwrap_or(false)
 }
@@ -93,7 +90,7 @@ fn is_hidden(entry: &DirEntry) -> bool {
     entry
         .file_name()
         .to_str()
-        .map(|s| s.starts_with("."))
+        .map(|s| s.starts_with('.'))
         .unwrap_or(false)
 }
 
