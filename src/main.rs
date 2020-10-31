@@ -1,24 +1,23 @@
 use std::env;
-use std::error;
+use std::error::Error;
 use structopt::StructOpt;
 use walkdir::{DirEntry, WalkDir};
 
-// Change the alias to `Box<error::Error>`.
-type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
-fn main() -> Result<()> {
+
+fn main() -> Result<(), Box<dyn Error>> {
     // parse options
     let opt = Opt::from_args();
 
-    // set walker to root or current working directory 
+    // set walker to root or current working directory
     // if none specified
-    let walker = WalkDir::new(opt.root.unwrap_or(cwd()));
+    let walker = WalkDir::new(opt.root.unwrap_or_else(cwd));
 
     // parse the user's pattern of files to include
     let r = regex::Regex::new(&opt.pattern)?;
 
     // parse the user's pattern of files to ignore (if they exist)
-    let to_ignore = opt.ignore.unwrap_or("".to_string());
+    let to_ignore = opt.ignore.unwrap_or_else(|| "".to_string());
     let ig = regex::Regex::new(&to_ignore)?;
 
     // walk the directory, checking for hidden files or programming
@@ -28,7 +27,6 @@ fn main() -> Result<()> {
         .into_iter()
         .filter_entry(|e| !is_hidden(e) && !ignore_libraries(e))
     {
-
         let entry = entry?;
         if let Some(x) = entry.file_name().to_str() {
             if r.is_match(x) {
@@ -67,7 +65,6 @@ struct Opt {
     pattern: String,
 }
 
-
 // ignore common programming folders containing third party libraries
 fn ignore_libraries(entry: &DirEntry) -> bool {
     let ignore_list = vec!["node_modules", "venv"];
@@ -93,4 +90,3 @@ fn is_hidden(entry: &DirEntry) -> bool {
         .map(|s| s.starts_with('.'))
         .unwrap_or(false)
 }
-
