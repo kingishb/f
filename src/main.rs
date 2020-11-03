@@ -1,13 +1,13 @@
 use std::env;
 use std::error::Error;
-use structopt::StructOpt;
+use clap::Clap;
 use walkdir::{DirEntry, WalkDir};
 
 
 
 fn main() -> Result<(), Box<dyn Error>> {
     // parse options
-    let opt = Opt::from_args();
+    let opt = Opt::parse();
 
     // set walker to root or current working directory
     // if none specified
@@ -49,19 +49,19 @@ fn cwd() -> String {
         .unwrap()
 }
 
-#[derive(Debug, StructOpt)]
-#[structopt(name = "f", about = "File finding utility")]
+#[derive(Clap)]
+#[clap(name="f", author = "File finding utility")]
 struct Opt {
     /// Optional root directory to use
-    #[structopt(short, long)]
+    #[clap(short, long)]
     root: Option<String>,
 
     /// Optional regexp to ignore
-    #[structopt(short, long)]
+    #[clap(short, long)]
     ignore: Option<String>,
 
     /// Regexp to search for
-    #[structopt(name = "PATTERN")]
+    #[clap(name = "PATTERN")]
     pattern: String,
 }
 
