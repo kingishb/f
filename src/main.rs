@@ -1,9 +1,7 @@
+use clap::Clap;
 use std::env;
 use std::error::Error;
-use clap::Clap;
 use walkdir::{DirEntry, WalkDir};
-
-
 
 fn main() -> Result<(), Box<dyn Error>> {
     // parse options
@@ -14,7 +12,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let walker = WalkDir::new(opt.root.unwrap_or_else(cwd));
 
     // parse the user's pattern of files to include
-    let r = regex::Regex::new(&opt.pattern)?;
+    let search = regex::Regex::new(&opt.pattern)?;
 
     // parse the user's pattern of files to ignore (if they exist)
     let to_ignore = opt.ignore.unwrap_or_else(|| "".to_string());
@@ -27,15 +25,21 @@ fn main() -> Result<(), Box<dyn Error>> {
         .into_iter()
         .filter_entry(|e| !is_hidden(e) && !ignore_libraries(e))
     {
-        let entry = entry?;
-        if let Some(x) = entry.file_name().to_str() {
-            if r.is_match(x) {
-                if to_ignore != "" && ig.is_match(entry.path().to_str().unwrap()) {
-                    continue;
+        match entry {
+            Ok(e) => {
+                if let Some(x) = e.file_name().to_str() {
+                    if search.is_match(x) {
+                        if to_ignore != "" && ig.is_match(e.path().to_str().unwrap()) {
+                            continue;
+                        }
+                        println!("{}", e.path().display());
+                    }
                 }
-                println!("{}", entry.path().display());
             }
-        }
+            Err(err) => {
+                continue;
+            }
+        };
     }
     Ok(())
 }
@@ -50,7 +54,7 @@ fn cwd() -> String {
 }
 
 #[derive(Clap)]
-#[clap(name="f", author = "File finding utility")]
+#[clap(name = "f", author = "File finding utility")]
 struct Opt {
     /// Optional root directory to use
     #[clap(short, long)]
@@ -67,7 +71,7 @@ struct Opt {
 
 // ignore common programming folders containing third party libraries
 fn ignore_libraries(entry: &DirEntry) -> bool {
-    let ignore_list = vec!["node_modules", "venv"];
+    let ignore_list = vec![".git", "node_modules", "venv"];
     entry
         .file_name()
         .to_str()
