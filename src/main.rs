@@ -36,7 +36,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     }
                 }
             }
-            Err(err) => {
+            Err(_) => {
                 continue;
             }
         };
