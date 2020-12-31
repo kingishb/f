@@ -29,7 +29,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             Ok(e) => {
                 if let Some(x) = e.file_name().to_str() {
                     if search.is_match(x) {
-                        if to_ignore != "" && ig.is_match(e.path().to_str().unwrap()) {
+                        if !to_ignore.is_empty() && ig.is_match(e.path().to_str().unwrap()) {
                             continue;
                         }
                         println!("{}", e.path().display());
