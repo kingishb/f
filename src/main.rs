@@ -1,9 +1,11 @@
 use clap::Clap;
 use std::env;
-use std::error::Error;
 use walkdir::{DirEntry, WalkDir};
 
-fn main() -> Result<(), Box<dyn Error>> {
+// Change the alias to `Box<error::Error>`.
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+
+fn main() -> Result<()> {
     // parse options
     let opt = Opt::parse();
 
@@ -51,6 +53,12 @@ fn cwd() -> String {
         .unwrap()
 }
 
+#[test]
+fn test_cwd() {
+    let current_dir = cwd();
+    assert!(current_dir.contains("/f"));
+}
+
 #[derive(Clap)]
 #[clap(name = "f", author = "File finding utility")]
 struct Opt {
@@ -69,7 +77,8 @@ struct Opt {
 
 // ignore common programming folders containing third party libraries
 fn ignore_libraries(entry: &DirEntry) -> bool {
-    let ignore_list = vec![".git", "node_modules", "venv"];
+    let ignore_list: Vec<&str> = vec![".git", "node_modules", "venv"];
+
     entry
         .file_name()
         .to_str()
