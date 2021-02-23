@@ -110,9 +110,7 @@ fn test_is_hidden() {
     let tmp_dir = tempdir::TempDir::new("test").unwrap();
     let file_path = tmp_dir.path().join(".hidden");
     File::create(file_path).unwrap();
-    // let entries = std::fs::read_dir("test").unwrap();
     for entry in WalkDir::new(tmp_dir.path().to_str().unwrap()) {
-        dbg!(tmp_dir.path().to_str().unwrap());
         let e = entry.unwrap();
         if e.file_name().to_str().unwrap().contains(".hidden") {
             assert!(is_hidden(&e));
