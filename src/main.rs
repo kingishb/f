@@ -1,5 +1,8 @@
 use clap::Clap;
 use std::env;
+use std::fs::File;
+use tempdir;
+
 use walkdir::{DirEntry, WalkDir};
 
 // Change the alias to `Box<error::Error>`.
@@ -100,4 +103,19 @@ fn is_hidden(entry: &DirEntry) -> bool {
         .to_str()
         .map(|s| s.starts_with('.'))
         .unwrap_or(false)
+}
+
+#[test]
+fn test_is_hidden() {
+    let tmp_dir = tempdir::TempDir::new("test").unwrap();
+    let file_path = tmp_dir.path().join(".hidden");
+    File::create(file_path).unwrap();
+    // let entries = std::fs::read_dir("test").unwrap();
+    for entry in WalkDir::new(tmp_dir.path().to_str().unwrap()) {
+        dbg!(tmp_dir.path().to_str().unwrap());
+        let e = entry.unwrap();
+        if e.file_name().to_str().unwrap().contains(".hidden") {
+            assert!(is_hidden(&e));
+        }
+    }
 }
