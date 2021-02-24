@@ -1,7 +1,5 @@
 use clap::Clap;
 use std::env;
-use std::fs::File;
-use tempdir;
 
 use walkdir::{DirEntry, WalkDir};
 
@@ -56,12 +54,6 @@ fn cwd() -> String {
         .unwrap()
 }
 
-#[test]
-fn test_cwd() {
-    let current_dir = cwd();
-    assert!(current_dir.contains("/f"));
-}
-
 #[derive(Clap)]
 #[clap(name = "f", author = "File finding utility")]
 struct Opt {
@@ -105,16 +97,29 @@ fn is_hidden(entry: &DirEntry) -> bool {
         .unwrap_or(false)
 }
 
-#[test]
-fn test_is_hidden() -> Result<()> {
-    let tmp_dir = tempdir::TempDir::new("test")?;
-    let file_path = tmp_dir.path().join(".hidden");
-    File::create(file_path)?;
-    for entry in WalkDir::new(tmp_dir.path().to_str().unwrap()) {
-        let e = entry?;
-        if e.file_name().to_str().unwrap().contains(".hidden") {
-            assert!(is_hidden(&e));
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs::File;
+    use tempdir;
+
+    #[test]
+    fn test_is_hidden() -> Result<()> {
+        let tmp_dir = tempdir::TempDir::new("test")?;
+        let file_path = tmp_dir.path().join(".hidden");
+        File::create(file_path)?;
+        for entry in WalkDir::new(tmp_dir.path().to_str().unwrap()) {
+            let e = entry?;
+            if e.file_name().to_str().unwrap().contains(".hidden") {
+                assert!(is_hidden(&e));
+            }
         }
+        Ok(())
     }
-    Ok(())
+
+    #[test]
+    fn test_cwd() {
+        let current_dir = cwd();
+        assert!(current_dir.contains("/f"));
+    }
 }
