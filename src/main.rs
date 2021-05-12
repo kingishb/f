@@ -1,7 +1,7 @@
 use clap::Clap;
 use std::env;
 
-use walkdir::{DirEntry, WalkDir};
+use ignore::{ WalkBuilder};
 
 // Change the alias to `Box<error::Error>`.
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
@@ -12,36 +12,31 @@ fn main() -> Result<()> {
 
     // set walker to root or current working directory
     // if none specified
-    let walker = WalkDir::new(opt.root.unwrap_or_else(cwd));
+    // let walker = WalkDir::new(opt.root.unwrap_or_else(cwd));
+    let walker = WalkBuilder::new(opt.root.unwrap_or_else(cwd))
+        .threads(6)
+        .build_parallel();
 
     // parse the user's pattern of files to include
     let search = regex::Regex::new(&opt.pattern)?;
 
-    // parse the user's pattern of files to ignore (if they exist)
-    let to_ignore = opt.ignore.unwrap_or_else(|| "".to_string());
-    let ig = regex::Regex::new(&to_ignore)?;
-
-    // walk the directory, checking for hidden files or programming
-    // libraries almost certainly not being searched for
-    // matching regexes for user's input
-    for entry in walker
-        .into_iter()
-        .filter_entry(|e| !is_hidden(e) && !ignore_libraries(e))
-    {
-        match entry {
-            Ok(e) => {
-                if let Some(x) = e.file_name().to_str() {
-                    if search.is_match(x) {
-                        if !to_ignore.is_empty() && ig.is_match(e.path().to_str().unwrap()) {
-                            continue;
+    
+        walker.run(|| {
+            Box::new( |result| {
+                use ignore::WalkState::*;
+                match result {
+                    Ok(entry) => {
+                        let s = entry.path().display().to_string();
+                        if search.is_match(&s) {
+                            println!("{}", s);
                         }
-                        println!("{}", e.path().display());
-                    }
-                }
-            }
-            Err(_) => continue,
-        };
-    }
+                    },
+                    Err(e) => println!("{}", e),
+                };
+                Continue
+            })
+        });
+
     Ok(())
 }
 
@@ -61,41 +56,12 @@ struct Opt {
     #[clap(short, long)]
     root: Option<String>,
 
-    /// Optional regexp to ignore
-    #[clap(short, long)]
-    ignore: Option<String>,
 
     /// Regexp to search for
     #[clap(name = "PATTERN")]
     pattern: String,
 }
 
-// ignore common programming folders containing third party libraries
-fn ignore_libraries(entry: &DirEntry) -> bool {
-    let ignore_list: Vec<&str> = vec![".git", "node_modules", "venv"];
-
-    entry
-        .file_name()
-        .to_str()
-        .map(|s| {
-            for i in ignore_list.iter() {
-                if s.contains(i) {
-                    return true;
-                }
-            }
-            false
-        })
-        .unwrap_or(false)
-}
-
-// ignore hidden directories
-fn is_hidden(entry: &DirEntry) -> bool {
-    entry
-        .file_name()
-        .to_str()
-        .map(|s| s.starts_with('.'))
-        .unwrap_or(false)
-}
 
 #[cfg(test)]
 mod tests {
@@ -103,19 +69,6 @@ mod tests {
     use std::fs::File;
     use tempdir;
 
-    #[test]
-    fn test_is_hidden() -> Result<()> {
-        let tmp_dir = tempdir::TempDir::new("test")?;
-        let file_path = tmp_dir.path().join(".hidden");
-        File::create(file_path)?;
-        for entry in WalkDir::new(tmp_dir.path().to_str().unwrap()) {
-            let e = entry?;
-            if e.file_name().to_str().unwrap().contains(".hidden") {
-                assert!(is_hidden(&e));
-            }
-        }
-        Ok(())
-    }
 
     #[test]
     fn test_cwd() {
