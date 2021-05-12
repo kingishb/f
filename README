@@ -10,9 +10,6 @@ Usage:
     # find files with the extension xml starting at ~/bin
     f --root ~/bin \.xml$
 
-    # find files with the extension xml starting at ~/bin not in the
-    # foo subfolder
-    f --root ~/bin --ignore foo \.xml$
 
 License:
 MIT
