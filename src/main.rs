@@ -12,7 +12,6 @@ fn main() -> Result<()> {
 
     // set walker to root or current working directory
     // if none specified
-    // let walker = WalkDir::new(opt.root.unwrap_or_else(cwd));
     let walker = WalkBuilder::new(opt.root.unwrap_or_else(cwd))
         .threads(6)
         .build_parallel();
