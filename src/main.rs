@@ -29,7 +29,10 @@ fn main() -> Result<()> {
                         println!("{}", s);
                     }
                 }
-                Err(e) => println!("{}", e),
+                Err(e) => {
+                    eprintln!("{}", e);
+                    std::process::exit(1);
+                },
             };
             Continue
         })
