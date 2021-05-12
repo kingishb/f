@@ -1,7 +1,7 @@
 use clap::Clap;
 use std::env;
 
-use ignore::{ WalkBuilder};
+use ignore::WalkBuilder;
 
 // Change the alias to `Box<error::Error>`.
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
@@ -19,22 +19,21 @@ fn main() -> Result<()> {
     // parse the user's pattern of files to include
     let search = regex::Regex::new(&opt.pattern)?;
 
-    
-        walker.run(|| {
-            Box::new( |result| {
-                use ignore::WalkState::*;
-                match result {
-                    Ok(entry) => {
-                        let s = entry.path().display().to_string();
-                        if search.is_match(&s) {
-                            println!("{}", s);
-                        }
-                    },
-                    Err(e) => println!("{}", e),
-                };
-                Continue
-            })
-        });
+    walker.run(|| {
+        Box::new(|result| {
+            use ignore::WalkState::*;
+            match result {
+                Ok(entry) => {
+                    let s = entry.path().display().to_string();
+                    if search.is_match(&s) {
+                        println!("{}", s);
+                    }
+                }
+                Err(e) => println!("{}", e),
+            };
+            Continue
+        })
+    });
 
     Ok(())
 }
@@ -55,19 +54,16 @@ struct Opt {
     #[clap(short, long)]
     root: Option<String>,
 
-
     /// Regexp to search for
     #[clap(name = "PATTERN")]
     pattern: String,
 }
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::fs::File;
     use tempdir;
-
 
     #[test]
     fn test_cwd() {
