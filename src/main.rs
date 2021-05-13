@@ -19,13 +19,16 @@ fn main() -> Result<()> {
     // parse the user's pattern of files to include
     let search = regex::Regex::new(&opt.pattern)?;
 
+    // stuff I never want to include
+    let ignore_list = regex::Regex::new("(node_modules|venv)")?;
+
     walker.run(|| {
         Box::new(|result| {
             use ignore::WalkState::*;
             match result {
                 Ok(entry) => {
                     let s = entry.path().display().to_string();
-                    if search.is_match(&s) {
+                    if search.is_match(&s)  && !ignore_list.is_match(&s){
                         println!("{}", s);
                     }
                 }
